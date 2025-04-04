@@ -22,6 +22,20 @@ class DepartmentResource < ApplicationResource
   attribute :name, :string
 end
 
+# Add the employee ressouce
+class EmployeeResource < ApplicationResource
+  self.model = Employee
+  self.type = :employees
+
+  attribute :first_name, :string
+  attribute :last_name, :string
+  attribute :age, :integer
+  attribute :position, :string
+  attribute :department_id, :integer
+
+  belongs_to :department
+end
+
 Graphiti.setup!
 
 class EmployeeDirectoryApp < Sinatra::Application
@@ -45,5 +59,11 @@ class EmployeeDirectoryApp < Sinatra::Application
   get '/api/v1/departments/:id' do
     departments = DepartmentResource.find(params)
     departments.to_jsonapi
+  end
+
+  # New route to get all employees
+  get '/api/v1/employees' do
+    employees = EmployeeResource.all(params)
+    employees.to_jsonapi
   end
 end
