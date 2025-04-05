@@ -13,7 +13,7 @@ const EmployeeTable: React.FC = () => {
   const [error, setError] = useState<boolean>(false);
   
   useEffect(() => {
-    async function fetchDepartments() {
+    const fetchDepartmentsFromAPI = async () => {
       setLoading(true);
       try {
         const response = await Departments.all();
@@ -41,7 +41,36 @@ const EmployeeTable: React.FC = () => {
       }
     }
 
-    fetchDepartments();
+    const loadDepartments = () => {
+      // If the department list already exists in the local Storage, don't fetch it
+      let departmentStorage = localStorage.getItem('departments')
+      console.log(departmentStorage)
+      if (!departmentStorage || departmentStorage.length === 0) {
+        fetchDepartmentsFromAPI();
+      } else {
+        // Parse the local storage item into a list of Departments
+        try {
+          departmentStorage = JSON.parse(departmentStorage);
+          if (Array.isArray(departmentStorage)) {
+            const departmentList: Department[] = departmentStorage.map((resource) => ({
+              id: resource.id,
+              name: resource.name,
+            }));
+            setDepartments(departmentList);
+          }
+        } catch (error) {
+          console.error("Error parsing department data from local storage:", error);
+          // If there is an issue with the object, remove it and fetch from API
+          localStorage.removeItem('departments');
+          fetchDepartmentsFromAPI(); 
+        }
+      }
+    }
+
+    loadDepartments()
+
+    
+
   }, []);
 
 
