@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 import { IoIosClose } from 'react-icons/io';
 
 interface ChildInputProps {
@@ -8,11 +8,14 @@ interface ChildInputProps {
 const InputFilter: React.FC<ChildInputProps> = ({ onTextChange }) => {
     const [inputText, setInputText] = useState('');
 
+    useEffect(() => {
+        // Send the updated text to the parent component
+        onTextChange(inputText);
+    }, [inputText]);
+
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const newText = event.target.value;
         setInputText(newText);
-        // Send the updated text to the parent component
-        onTextChange(newText);
     };
 
     return (
