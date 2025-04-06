@@ -27,4 +27,23 @@ export class Employees extends ApplicationRecord {
 
   @BelongsTo() departments: Departments
 
+  static async findByName(searchText: string, pageNumber:number, pageSize:number, sort:string) {
+    try {
+      const response = await fetch(`${this.baseUrl}${this.apiNamespace}/employees/find/${searchText}?page[number]=${String(pageNumber)}&page[size]=${String(pageSize)}&sort=${sort}&include=department`);
+      console.log(response)
+      if (response.ok) {
+        const json = await response.json();
+        return json;
+      } else if (response.status === 404) {
+        return {};
+      } else {
+        console.error('Error searching employees:', response.status, response.statusText);
+        return {};
+      }
+    } catch (error) {
+      console.error('Error searching employees:', error);
+      return {};
+    }
+  }
+
 }

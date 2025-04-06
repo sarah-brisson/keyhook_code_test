@@ -27,7 +27,6 @@ const TanstackTable: React.FC<TanstackTableProps> = (props) => {
 
     useEffect(() => {
         // Inform the parent about pagination changes
-        console.log(pagination)
         props.onPaginationChange(pagination);
     }, [pagination]);
 
@@ -117,7 +116,6 @@ const TanstackTable: React.FC<TanstackTableProps> = (props) => {
                 {/* Next page */}
                 <button
                     onClick={() => {
-                        console.log(pagination)
                         setPagination((prev) => ({
                             ...prev,
                             pageIndex: prev.pageIndex,
