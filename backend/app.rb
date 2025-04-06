@@ -20,6 +20,8 @@ class DepartmentResource < ApplicationResource
   self.type = :departments
 
   attribute :name, :string
+  
+  has_many :employees
 end
 
 # Add the employee ressouce
