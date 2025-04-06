@@ -17,3 +17,15 @@ export interface PaginationState {
   pageIndex: number;
   pageSize: number;
 }
+
+export interface EmployeeResponse {
+  id: string;
+  first_name: string;
+  last_name: string; age:
+  string; position: string;
+  department_id: string;
+  department: {
+    name: string;
+    id: string
+  };
+}

@@ -3,10 +3,9 @@ import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import { PuffLoader } from 'react-spinners';
 
 import { Departments, Employees } from '../../api/apiConfig';
-import { Department, Employee } from '../../utils/types';
+import { Department, Employee, EmployeeResponse } from '../../utils/types';
 import TanstackTable from '../common/Table';
 import InputFilter from './InputFilter';
-import { CollectionProxy } from 'spraypaint/lib-esm/proxies';
 
 
 const EmployeeTable: React.FC = () => {
@@ -87,123 +86,55 @@ const EmployeeTable: React.FC = () => {
 
 
   const buildOrderInstructions = () => {
-    // Build order instructions
-    let orderConfig: Record<string, 'asc' | 'desc'> = {};
-
+    let sortString = ""
     if (parentSorting && parentSorting.length > 0) {
-      const sortConfig = parentSorting[0]
-      const sortField = sortConfig.id;
-      const sortDirection: 'asc' | 'desc' = sortConfig.desc ? 'desc' : 'asc';
 
-      orderConfig[sortField] = sortDirection;
-    } else {
-      // Default sorting if no parentSorting is applied
-      orderConfig['last_name'] = 'asc';
+      console.log(parentSorting)
+      sortString = parentSorting[0].desc ? '-' : '' + parentSorting[0].id
     }
 
-    return orderConfig
+    return sortString
   }
 
-  const buildEmployeeListFromAPI = (response: CollectionProxy<Employees>) => {
-    if (response.raw && response.raw.data) {
-      const rawEmployeedata = response.raw.data
-      if (Array.isArray(rawEmployeedata)) {
-        // Transform the raw data into a list of Employee objects to be used in the table
-        const employeeList: Employee[] = []
-        rawEmployeedata.map((employee) => {
-          const newEmployee: Employee = {
-            id: "",
-            firstName: "",
-            lastName: "",
-            age: "",
-            position: "",
-            department_id: "",
-            department_name: ""
-          }
-
-          newEmployee.id = employee.id ? employee.id : ""
-          if (employee.attributes) {
-            if ("first_name" in employee.attributes && employee.attributes["first_name"] != undefined) {
-              newEmployee.firstName = String(employee.attributes["first_name"])
-            }
-            if ("last_name" in employee.attributes && employee.attributes["last_name"] != undefined) {
-              newEmployee.lastName = String(employee.attributes["last_name"])
-            }
-            if ("age" in employee.attributes && employee.attributes["age"] != undefined) {
-              newEmployee.age = String(employee.attributes["age"])
-            }
-            if ("position" in employee.attributes && employee.attributes["position"] != undefined) {
-              newEmployee.position = String(employee.attributes["position"])
-            }
-          }
-
-          // Get department from relationships
-          if (
-            employee.relationships
-            && "department" in employee.relationships
-            && employee.relationships["department"] != undefined
-          ) {
-            // Parse the department relationship
-            const employeeDepartment = JSON.parse(JSON.stringify(employee.relationships["department"]))
-            if (employeeDepartment.data) {
-              const departmentData = employeeDepartment.data
-              if (departmentData.id) {
-                newEmployee.department_id = String(departmentData.id);
-                // Find the department name from the departments list with the id
-                // This is a bit inefficient, but it works for small lists
-                const department = departments.find(dept => dept.id === departmentData.id);
-                newEmployee.department_name = department ? department.name : "";
-              }
-
-            }
-          }
-          employeeList.push(newEmployee)
-        })
-        setEmployees(employeeList);
-        setLoading(false)
-        setError("");
+  const buildEmployeeList = (apiResponse: EmployeeResponse[]) => {
+    // Set the Employee List
+    const employeeList: Employee[] = []
+    apiResponse.map((employee) => {
+      const newEmployee: Employee = {
+        id: "",
+        firstName: "",
+        lastName: "",
+        age: "",
+        position: "",
+        department_id: "",
+        department_name: ""
       }
-    }
+
+      newEmployee.id = employee.id ? employee.id : ""
+      newEmployee.firstName = employee.first_name ? employee.first_name : ""
+      newEmployee.lastName = employee.last_name ? employee.last_name : ""
+      newEmployee.age = employee.age ? employee.age : ""
+      newEmployee.position = employee.position ? employee.position : ""
+      newEmployee.department_id = employee.department_id ? employee.department_id : ""
+      // Find the department name from the departments list with the id
+      if (employee.department && employee.department?.name) {
+        newEmployee.department_name = employee.department.name ? employee.department.name : "";
+      }
+
+      employeeList.push(newEmployee)
+    })
+    return employeeList
   }
 
   async function findEmployeesByName() {
-    let sortString = ""
-    if (parentSorting && parentSorting.length > 0) {
-      sortString = parentSorting[0].desc ? '-' : '' + parentSorting[0].id
-    }
+    const sortString = buildOrderInstructions()
     Employees.findByName(textFilter, parentPagination.pageIndex, parentPagination.pageSize, sortString).then((response) => {
       if (response && Array.isArray(response)) {
         // Set the Employee List
-        // Inefficient because the logic is the same as buildEmployeeListFromAPI
-        // But the reponse that we get here is a simple json
-        const employeeList: Employee[] = []
-        response.map((employee) => {
-          const newEmployee: Employee = {
-            id: "",
-            firstName: "",
-            lastName: "",
-            age: "",
-            position: "",
-            department_id: "",
-            department_name: ""
-          }
-
-          newEmployee.id = employee.id ? employee.id : ""
-          newEmployee.firstName = employee.first_name ? employee.first_name : ""
-          newEmployee.lastName = employee.last_name ? employee.last_name : ""
-          newEmployee.age = employee.age ? employee.age : ""
-          newEmployee.position = employee.position ? employee.position : ""
-          newEmployee.department_id = employee.department_id ? employee.department_id : ""
-          // Find the department name from the departments list with the id
-          const department = departments.find(dept => dept.id === employee.department_id);
-          newEmployee.department_name = department ? department.name : "";
-
-
-          employeeList.push(newEmployee)
-        })
+        const employeeList = buildEmployeeList(response)
 
         setLoading(false);
-        setEmployees(employeeList); 
+        setEmployees(employeeList);
         setError("");
       } else {
         setLoading(false);
@@ -214,23 +145,20 @@ const EmployeeTable: React.FC = () => {
 
   const fetchEmployees = async () => {
     try {
-      const orderConfig: Record<string, 'asc' | 'desc'> = buildOrderInstructions();
-
+      const sortString = buildOrderInstructions()
       // API Call to fetch employees
-      const response = await Employees
-        .includes("department")
-        .order(orderConfig)
-        .page(parentPagination.pageIndex)
-        .per(parentPagination.pageSize)
-        .all();
+      const response = await Employees.getAll(parentPagination.pageIndex, parentPagination.pageSize, sortString)
 
-      if (response.raw && response.raw.data) {
-        const rawEmployeedata = response.raw.data
-        if (Array.isArray(rawEmployeedata)) {
-          buildEmployeeListFromAPI(response)
-        }
+      console.log(response)
+      if (response && response.data && Array.isArray(response.data)) {
+        const employeeList = buildEmployeeList(response.data)
+        setLoading(false);
+        setEmployees(employeeList);
+        setError("");
+      } else {
+        setLoading(false);
+        setError("Error fetching employees");
       }
-
     } catch (err) {
       setLoading(false);
       setError("Error fetching employees");
