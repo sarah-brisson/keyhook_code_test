@@ -226,6 +226,7 @@ const EmployeeTable: React.FC = () => {
         size={60}
         aria-label="Loading Spinner"
         data-testid="loader"
+        className='flex justify-center align-center m-20'
       /> : error !== "" ? <div>{error}</div> :
         <TanstackTable
           data={employees}
