@@ -66,7 +66,7 @@ class EmployeeDirectoryApp < Sinatra::Application
   # New route to get all employees
   get '/api/v1/employees' do
     employees = EmployeeResource.all(params)
-    employees.to_jsonapi
+    employees.to_json
   end
 
   get '/api/v1/employees/find/:text' do
@@ -76,7 +76,7 @@ class EmployeeDirectoryApp < Sinatra::Application
     if @employees.present?
       status 200
       content_type :json
-      @employees.to_json
+      @employees.to_json(include: [:department])
     else
       status 404
       content_type :json
