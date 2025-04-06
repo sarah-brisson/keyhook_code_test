@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Departments, Employees } from '../api/apiConfig';
-import { Department, Employee } from '../utils/types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Departments, Employees } from '../../api/apiConfig';
+import { Department, Employee } from '../../utils/types';
+import { ColumnDef } from '@tanstack/react-table';
+import TanstackTable from '../common/Table';
 
 
 const EmployeeTable: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     const fetchDepartmentsFromAPI = async () => {
@@ -29,11 +31,9 @@ const EmployeeTable: React.FC = () => {
         localStorage.setItem('departments', JSON.stringify(departmentList));
 
         setDepartments(departmentList);
-        setError(false);
-        setLoading(false);
+        setError("");
       } catch (err) {
-        setError(true);
-        setLoading(false);
+        setError("Error fetching departments");
         console.error('Error fetching departments:', err);
       }
     }
@@ -69,12 +69,13 @@ const EmployeeTable: React.FC = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
+      setLoading(true);
       try {
         const response = await Employees
           .includes("department")
           .all();
 
-          if (response.raw && response.raw.data) {
+        if (response.raw && response.raw.data) {
           const rawEmployeedata = response.raw.data
           if (Array.isArray(rawEmployeedata)) {
             // Transform the raw data into a list of Employee objects to be used in the table
@@ -129,10 +130,14 @@ const EmployeeTable: React.FC = () => {
               employeeList.push(newEmployee)
             })
             setEmployees(employeeList);
+            setLoading(false)
+            setError("");
           }
         }
 
       } catch (err) {
+        setLoading(false);
+        setError("Error fetching employees");
         console.error(err);
       }
     };
@@ -140,8 +145,47 @@ const EmployeeTable: React.FC = () => {
     fetchEmployees();
   }, [departments])
 
+  // Columns for the Tanstack Table
+  const columns = useMemo<ColumnDef<Employee>[]>(
+    () => [
+      {
+        header: 'First Name',
+        accessorKey: 'firstName',
+      },
+      {
+        header: 'Last Name',
+        accessorKey: 'lastName',
+      },
+      {
+        header: 'Age',
+        accessorKey: 'age',
+      },
+      {
+        header: 'Position',
+        accessorKey: 'position',
+      },
+      {
+        header: 'Department Name',
+        accessorFn: (row) => row.department_name,
+      },
+    ],
+    []
+  );
+
+  if (loading) {
+    return <div>Loading employees...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading employees: {error}</div>;
+  }
+
   return (
     <>
+      {loading ? <div>Loading employees...</div>
+        : error ? <div>Error loading employees: {error}</div>
+          : <TanstackTable data={employees} columns={columns} />
+      }
     </>
   );
 };
