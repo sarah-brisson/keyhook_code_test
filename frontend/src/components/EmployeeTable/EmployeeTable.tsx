@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ColumnDef, SortingState } from '@tanstack/react-table';
+import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 import { PuffLoader } from 'react-spinners';
 
 import { Departments, Employees } from '../../api/apiConfig';
@@ -13,10 +13,12 @@ const EmployeeTable: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [parentSorting, setParentSorting] = useState<SortingState>([]);
-
-  const handleSortingChange = (newSorting: SortingState) => {
-    setParentSorting(newSorting);
-  };
+  const initialPageIndex = 1  //default page index
+  const initialPageSize = 20 //default page size
+  const [parentPagination, setParentPagination] = useState<PaginationState>({
+    pageIndex: initialPageIndex,
+    pageSize: initialPageSize,
+  });
 
   useEffect(() => {
     const fetchDepartmentsFromAPI = async () => {
@@ -95,6 +97,8 @@ const EmployeeTable: React.FC = () => {
       const response = await Employees
         .includes("department")
         .order(orderConfig)
+        .page(parentPagination.pageIndex)
+        .per(parentPagination.pageSize)
         .all();
 
       if (response.raw && response.raw.data) {
@@ -172,11 +176,17 @@ const EmployeeTable: React.FC = () => {
   useEffect(() => {
     // If the sorting changes, fetch the employees again
     if (parentSorting.length > 0) {
-      console.log("here")
       fetchEmployees();
     }
   }, [parentSorting])
 
+  useEffect(() => {
+      fetchEmployees();
+  }, [parentPagination])
+
+  const handlePaginationChange = (newPagination: PaginationState) => {
+    setParentPagination(newPagination);
+  };
 
   // Columns for the Tanstack Table
   const columns = useMemo<ColumnDef<Employee>[]>(
@@ -223,7 +233,14 @@ const EmployeeTable: React.FC = () => {
         aria-label="Loading Spinner"
         data-testid="loader"
       /> : error !== "" ? <div>{error}</div> :
-        <TanstackTable data={employees} columns={columns} onSortingChange={handleSortingChange} />
+        <TanstackTable
+          data={employees}
+          columns={columns}
+          onSortingChange={setParentSorting}
+          parentPageIndex={initialPageIndex}
+          parentPageSize={initialPageSize}
+          onPaginationChange={handlePaginationChange}
+        />
       }
     </div>
   );

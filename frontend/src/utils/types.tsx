@@ -12,3 +12,8 @@ export interface Department {
   id: string;
   name: string;
 }
+
+export interface PaginationState {
+  pageIndex: number;
+  pageSize: number;
+}
