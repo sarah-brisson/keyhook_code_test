@@ -77,13 +77,6 @@ const EmployeeTable: React.FC = () => {
     loadDepartments()
   }, []);
 
-  useEffect(() => {
-    // If the text filter changes, fetch the employees with applied filter
-    if (textFilter.length > 0) {
-      findEmployeesByName();
-    }
-  }, [textFilter])
-
 
   const buildOrderInstructions = () => {
     let sortString = ""
@@ -145,6 +138,7 @@ const EmployeeTable: React.FC = () => {
 
   const fetchEmployees = async () => {
     try {
+      setLoading(true);
       const sortString = buildOrderInstructions()
       // API Call to fetch employees
       const response = await Employees.getAll(parentPagination.pageIndex, parentPagination.pageSize, sortString)
@@ -167,20 +161,20 @@ const EmployeeTable: React.FC = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    fetchEmployees();
-  }, [departments])
-
-  useEffect(() => {
     // If the sorting changes, fetch the employees again
     if (parentSorting.length > 0) {
       fetchEmployees();
     }
-  }, [parentSorting])
+  }, [parentSorting, parentPagination])
 
   useEffect(() => {
-    fetchEmployees();
-  }, [parentPagination])
+    // If the text filter changes, fetch the employees with applied filter
+    if (textFilter.length > 0) {
+      findEmployeesByName();
+    } else {
+      fetchEmployees()
+    }
+  }, [departments, textFilter])
 
   const handlePaginationChange = (newPagination: PaginationState) => {
     setParentPagination(newPagination);
