@@ -68,4 +68,19 @@ class EmployeeDirectoryApp < Sinatra::Application
     employees = EmployeeResource.all(params)
     employees.to_jsonapi
   end
+
+  get '/api/v1/employees/find/:text' do
+    search_term = params[:text].downcase
+    @employees = Employee.where("lower(first_name) LIKE ? OR lower(last_name) LIKE ?", "%#{search_term}%", "%#{search_term}%")
+
+    if @employees.present?
+      status 200
+      content_type :json
+      @employees.to_json
+    else
+      status 404
+      content_type :json
+      '{}'.to_json
+    end
+  end
 end
