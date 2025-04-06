@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, SortingState } from '@tanstack/react-table';
 import { PuffLoader } from 'react-spinners';
 
 import { Departments, Employees } from '../../api/apiConfig';
@@ -12,6 +12,11 @@ const EmployeeTable: React.FC = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [parentSorting, setParentSorting] = useState<SortingState>([]);
+
+  const handleSortingChange = (newSorting: SortingState) => {
+    setParentSorting(newSorting);
+  };
 
   useEffect(() => {
     const fetchDepartmentsFromAPI = async () => {
@@ -69,83 +74,109 @@ const EmployeeTable: React.FC = () => {
     loadDepartments()
   }, []);
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      setLoading(true);
-      try {
-        const response = await Employees
-          .includes("department")
-          .all();
+  const fetchEmployees = async () => {
+    try {
 
-        if (response.raw && response.raw.data) {
-          const rawEmployeedata = response.raw.data
-          if (Array.isArray(rawEmployeedata)) {
-            // Transform the raw data into a list of Employee objects to be used in the table
-            const employeeList: Employee[] = []
-            rawEmployeedata.map((employee) => {
-              const newEmployee: Employee = {
-                id: "",
-                firstName: "",
-                lastName: "",
-                age: "",
-                position: "",
-                department_id: "",
-                department_name: ""
-              }
+      // Build order instructions
+      let orderConfig: Record<string, 'asc' | 'desc'> = {};
 
-              newEmployee.id = employee.id ? employee.id : ""
-              if (employee.attributes) {
-                if ("first_name" in employee.attributes && employee.attributes["first_name"] != undefined) {
-                  newEmployee.firstName = String(employee.attributes["first_name"])
-                }
-                if ("last_name" in employee.attributes && employee.attributes["last_name"] != undefined) {
-                  newEmployee.lastName = String(employee.attributes["last_name"])
-                }
-                if ("age" in employee.attributes && employee.attributes["age"] != undefined) {
-                  newEmployee.age = String(employee.attributes["age"])
-                }
-                if ("position" in employee.attributes && employee.attributes["position"] != undefined) {
-                  newEmployee.position = String(employee.attributes["position"])
-                }
-              }
+      if (parentSorting && parentSorting.length > 0) {
+        const sortConfig = parentSorting[0]
+        const sortField = sortConfig.id;
+        const sortDirection: 'asc' | 'desc' = sortConfig.desc ? 'desc' : 'asc';
 
-              // Get department from relationships
-              if (
-                employee.relationships
-                && "department" in employee.relationships
-                && employee.relationships["department"] != undefined
-              ) {
-                // Parse the department relationship
-                const employeeDepartment = JSON.parse(JSON.stringify(employee.relationships["department"]))
-                if (employeeDepartment.data) {
-                  const departmentData = employeeDepartment.data
-                  if (departmentData.id) {
-                    newEmployee.department_id = String(departmentData.id);
-                    // Find the department name from the departments list with the id
-                    // This is a bit inefficient, but it works for small lists
-                    const department = departments.find(dept => dept.id === departmentData.id);
-                    newEmployee.department_name = department ? department.name : "";
-                  }
-
-                }
-              }
-              employeeList.push(newEmployee)
-            })
-            setEmployees(employeeList);
-            setLoading(false)
-            setError("");
-          }
-        }
-
-      } catch (err) {
-        setLoading(false);
-        setError("Error fetching employees");
-        console.error(err);
+        orderConfig[sortField] = sortDirection;
+      } else {
+        // Default sorting if no parentSorting is applied
+        orderConfig['last_name'] = 'asc';
       }
-    };
 
+      // API Call to fetch employees
+      const response = await Employees
+        .includes("department")
+        .order(orderConfig)
+        .all();
+
+      if (response.raw && response.raw.data) {
+        const rawEmployeedata = response.raw.data
+        if (Array.isArray(rawEmployeedata)) {
+          // Transform the raw data into a list of Employee objects to be used in the table
+          const employeeList: Employee[] = []
+          rawEmployeedata.map((employee) => {
+            const newEmployee: Employee = {
+              id: "",
+              firstName: "",
+              lastName: "",
+              age: "",
+              position: "",
+              department_id: "",
+              department_name: ""
+            }
+
+            newEmployee.id = employee.id ? employee.id : ""
+            if (employee.attributes) {
+              if ("first_name" in employee.attributes && employee.attributes["first_name"] != undefined) {
+                newEmployee.firstName = String(employee.attributes["first_name"])
+              }
+              if ("last_name" in employee.attributes && employee.attributes["last_name"] != undefined) {
+                newEmployee.lastName = String(employee.attributes["last_name"])
+              }
+              if ("age" in employee.attributes && employee.attributes["age"] != undefined) {
+                newEmployee.age = String(employee.attributes["age"])
+              }
+              if ("position" in employee.attributes && employee.attributes["position"] != undefined) {
+                newEmployee.position = String(employee.attributes["position"])
+              }
+            }
+
+            // Get department from relationships
+            if (
+              employee.relationships
+              && "department" in employee.relationships
+              && employee.relationships["department"] != undefined
+            ) {
+              // Parse the department relationship
+              const employeeDepartment = JSON.parse(JSON.stringify(employee.relationships["department"]))
+              if (employeeDepartment.data) {
+                const departmentData = employeeDepartment.data
+                if (departmentData.id) {
+                  newEmployee.department_id = String(departmentData.id);
+                  // Find the department name from the departments list with the id
+                  // This is a bit inefficient, but it works for small lists
+                  const department = departments.find(dept => dept.id === departmentData.id);
+                  newEmployee.department_name = department ? department.name : "";
+                }
+
+              }
+            }
+            employeeList.push(newEmployee)
+          })
+          setEmployees(employeeList);
+          setLoading(false)
+          setError("");
+        }
+      }
+
+    } catch (err) {
+      setLoading(false);
+      setError("Error fetching employees");
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
     fetchEmployees();
   }, [departments])
+
+  useEffect(() => {
+    // If the sorting changes, fetch the employees again
+    if (parentSorting.length > 0) {
+      console.log("here")
+      fetchEmployees();
+    }
+  }, [parentSorting])
+
 
   // Columns for the Tanstack Table
   const columns = useMemo<ColumnDef<Employee>[]>(
@@ -153,22 +184,32 @@ const EmployeeTable: React.FC = () => {
       {
         header: 'First Name',
         accessorKey: 'firstName',
+        id: 'first_name',
+        enableSorting: true,
       },
       {
         header: 'Last Name',
         accessorKey: 'lastName',
+        id: 'last_name',
+        enableSorting: true,
       },
       {
         header: 'Age',
         accessorKey: 'age',
+        id: 'age',
+        enableSorting: true,
       },
       {
         header: 'Position',
         accessorKey: 'position',
+        id: 'position',
+        enableSorting: true,
       },
       {
         header: 'Department Name',
+        id: 'department_name',
         accessorFn: (row) => row.department_name,
+        enableSorting: false,
       },
     ],
     []
@@ -177,12 +218,12 @@ const EmployeeTable: React.FC = () => {
   return (
     <div className='flex items-center justify-center p-10'>
       {loading ? <PuffLoader
-      color="green"
-      size={60}
-      aria-label="Loading Spinner"
-      data-testid="loader"
+        color="green"
+        size={60}
+        aria-label="Loading Spinner"
+        data-testid="loader"
       /> : error !== "" ? <div>{error}</div> :
-      <TanstackTable data={employees} columns={columns} />
+        <TanstackTable data={employees} columns={columns} onSortingChange={handleSortingChange} />
       }
     </div>
   );
