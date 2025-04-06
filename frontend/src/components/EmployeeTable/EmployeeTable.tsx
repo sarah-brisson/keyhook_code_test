@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { PuffLoader } from 'react-spinners';
+
 import { Departments, Employees } from '../../api/apiConfig';
 import { Department, Employee } from '../../utils/types';
-import { ColumnDef } from '@tanstack/react-table';
 import TanstackTable from '../common/Table';
 
 
@@ -172,21 +174,17 @@ const EmployeeTable: React.FC = () => {
     []
   );
 
-  if (loading) {
-    return <div>Loading employees...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading employees: {error}</div>;
-  }
-
   return (
-    <>
-      {loading ? <div>Loading employees...</div>
-        : error ? <div>Error loading employees: {error}</div>
-          : <TanstackTable data={employees} columns={columns} />
+    <div className='flex items-center justify-center p-10'>
+      {loading ? <PuffLoader
+      color="green"
+      size={60}
+      aria-label="Loading Spinner"
+      data-testid="loader"
+      /> : error !== "" ? <div>{error}</div> :
+      <TanstackTable data={employees} columns={columns} />
       }
-    </>
+    </div>
   );
 };
 

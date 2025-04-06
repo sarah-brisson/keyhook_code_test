@@ -15,12 +15,12 @@ const TanstackTable: React.FC<TanstackTableProps> = (props) => {
     });
 
     return (
-        <table>
-            <thead>
+        <table className='min-w-full divide-y divide-gray-200'>
+            <thead className='bg-blue-100'>
                 {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
                         {headerGroup.headers.map((header) => (
-                            <th key={header.id}>
+                            <th key={header.id} className="px-6 py-3 text-left text-xs font-medium text-gray-800 tracking-wider">
                                 {header.isPlaceholder
                                     ? null
                                     : flexRender(
@@ -32,11 +32,12 @@ const TanstackTable: React.FC<TanstackTableProps> = (props) => {
                     </tr>
                 ))}
             </thead>
-            <tbody>
-                {table.getRowModel().rows.map((row) => (
-                    <tr key={row.id}>
+            <tbody className="bg-white divide-y divide-gray-200">
+                {table.getRowModel().rows.map((row, index) => (
+                    <tr key={row.id} className={`hover:bg-blue-50 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
                         {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id}>
+                            <td key={cell.id}
+                                className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </td>
                         ))}
