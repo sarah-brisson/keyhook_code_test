@@ -77,6 +77,11 @@ const EmployeeTable: React.FC = () => {
         setLoading(false);
         setEmployees(employeeList);
         setError("");
+        // Set the pagination state to the first page
+        setParentPagination({
+          pageIndex: initialPageIndex,
+          pageSize: parentPagination.pageSize,
+        })
       } else {
         setLoading(false);
         setError("No employees found with that name");
@@ -95,6 +100,11 @@ const EmployeeTable: React.FC = () => {
         setLoading(false);
         setEmployees(employeeList);
         setError("");
+        // Set the pagination state to the first page
+        setParentPagination({
+          pageIndex: initialPageIndex,
+          pageSize: parentPagination.pageSize,
+        })
       } else {
         setLoading(false);
         setError("No employees found for this Department");
@@ -114,6 +124,11 @@ const EmployeeTable: React.FC = () => {
         setLoading(false);
         setEmployees(employeeList);
         setError("");
+        // Set the pagination state to the first page
+        setParentPagination({
+          pageIndex: initialPageIndex,
+          pageSize: parentPagination.pageSize,
+        })
       } else {
         setLoading(false);
         setError("Error fetching employees");
