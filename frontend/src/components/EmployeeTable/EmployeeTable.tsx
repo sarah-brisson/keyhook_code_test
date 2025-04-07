@@ -148,34 +148,24 @@ const EmployeeTable: React.FC = () => {
   };
 
   useEffect(() => {
-    // When a department is selected, fetch the employees for that department 
-    if (selectedDepartment.length > 0) {
-      findEmployeesByDepartment();
-    } else {
-      // If no department is selected, fetch all employees
-      fetchEmployees()
-    }
-  }
-    , [selectedDepartment]);
-
-  useEffect(() => {
-    // If the sorting changes, fetch the employees again
+    // If there is a filter on name, then search by name
+    // If there is a filter on department, then search by department (+ name)
+    // If there is no filter, then fetch all employees
     if (textFilter.length > 0) {
-      findEmployeesByName();
+      if (selectedDepartment.length > 0) {
+        findEmployeesByDepartment();
+      } else {
+        findEmployeesByName();
+      }
     } else
       if (parentSorting.length > 0) {
-        fetchEmployees();
+        if (selectedDepartment.length > 0) {
+          findEmployeesByDepartment();
+        } else {
+          fetchEmployees();
+        }
       }
-  }, [parentSorting, parentPagination])
-
-  useEffect(() => {
-    // If the text filter changes, fetch the employees with applied filter
-    if (textFilter.length > 0) {
-      findEmployeesByName();
-    } else {
-      fetchEmployees()
-    }
-  }, [textFilter])
+  }, [parentSorting, parentPagination, selectedDepartment, textFilter])
 
   const handlePaginationChange = (newPagination: PaginationState) => {
     setParentPagination(newPagination);
@@ -188,9 +178,10 @@ const EmployeeTable: React.FC = () => {
   const handleDepartmentSelect = (departmentOption: DepartmentOption | undefined) => {
     if (departmentOption !== undefined) {
       setSelectedDepartment(departmentOption.label);
+    } else {
+      setSelectedDepartment("");
     }
   };
-
 
   // Columns for the Tanstack Table
   const columns = useMemo<ColumnDef<Employee>[]>(
