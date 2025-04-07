@@ -6,28 +6,42 @@ import { FaAnglesLeft, FaAnglesRight } from 'react-icons/fa6';
 interface TanstackTableProps {
     data: any[];
     columns: ColumnDef<any>[];
+    sortingState: SortingState;
     onSortingChange: (sorting: SortingState) => void;
-    parentPageIndex: number,
-    parentPageSize: number,
+    parentPagination: PaginationState;
     onPaginationChange: (pagination: PaginationState) => void;
-
 }
 
 const TanstackTable: React.FC<TanstackTableProps> = (props) => {
-    const [sorting, setSorting] = useState<SortingState>([]);
+    const [sorting, setSorting] = useState<SortingState>([
+        {
+            id: props.sortingState[0]?.id || 'first_name',
+            desc: props.sortingState[0]?.desc || false,
+        }
+    ]);
+
     const [pagination, setPagination] = useState({
-        pageIndex: props.parentPageIndex,
-        pageSize: props.parentPageSize,
+        pageIndex: props.parentPagination.pageIndex,
+        pageSize: props.parentPagination.pageSize,
     });
 
     useEffect(() => {
-        // Communicate sorting changes to the parent component
-        props.onSortingChange(sorting);
+        // Only call onSortingChange if sorting has actually changed
+        if ((sorting.length > 0) && (sorting[0].desc !== props.sortingState[0].desc || sorting[0].id !== props.sortingState[0].id)) {
+            props.onSortingChange(sorting);
+        }
+        () => { return; }
     }, [sorting]);
 
     useEffect(() => {
         // Inform the parent about pagination changes
-        props.onPaginationChange(pagination);
+        if (
+            pagination.pageIndex !== props.parentPagination.pageIndex ||
+            pagination.pageSize !== props.parentPagination.pageSize
+        ) {
+            props.onPaginationChange(pagination);
+        }
+        () => { return; }
     }, [pagination]);
 
     const table = useReactTable({
@@ -51,10 +65,9 @@ const TanstackTable: React.FC<TanstackTableProps> = (props) => {
                             {headerGroup.headers.map((header) => (
                                 <th key={header.id} className="px-6 py-3 text-left text-xs font-medium text-gray-800 tracking-wider">
                                     {header.isPlaceholder ? null : (
-                                        // Make department column non-sortable 
                                         <div
-                                            className={`select-none ${header.column.id !== 'department_name' ? 'cursor-pointer' : ''
-                                                }`}
+                                            // Make department column non-sortable 
+                                            className={`select-none ${header.column.id !== 'department_name' ? 'cursor-pointer' : ''}`}
                                             onClick={
                                                 header.column.id !== 'department_name'
                                                     ? header.column.getToggleSortingHandler()
@@ -122,11 +135,11 @@ const TanstackTable: React.FC<TanstackTableProps> = (props) => {
                         }));
                         table.nextPage()
                     }}
-                    // disabled={!table.getCanNextPage()}
+                // disabled={!table.getCanNextPage()}
                 >
                     <FaAngleRight />
                 </button>
-                
+
                 {/* TODO   Commented because table.lastPage() does not work */}
                 {/* End of listy */}
                 {/* <button

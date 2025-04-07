@@ -13,7 +13,10 @@ const EmployeeTable: React.FC = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const [parentSorting, setParentSorting] = useState<SortingState>([]);
+  const [parentSorting, setParentSorting] = useState<SortingState>([{
+    id: 'first_name',
+    desc: false,
+  }]);
   const initialPageIndex = 1  //default page index
   const initialPageSize = 20 //default page size
   const [parentPagination, setParentPagination] = useState<PaginationState>({
@@ -77,22 +80,20 @@ const EmployeeTable: React.FC = () => {
     loadDepartments()
   }, []);
 
-
+  // Function to add the sorting request to the API calls
   const buildOrderInstructions = () => {
     let sortString = ""
     if (parentSorting && parentSorting.length > 0) {
-
-      console.log(parentSorting)
-      sortString = parentSorting[0].desc ? '-' : '' + parentSorting[0].id
+      sortString = (parentSorting[0].desc ? '-' : '') + parentSorting[0].id
     }
-
     return sortString
   }
 
+  // Function to build the list of Employee objects from the API response
   const buildEmployeeList = (apiResponse: EmployeeResponse[]) => {
-    // Set the Employee List
     const employeeList: Employee[] = []
     apiResponse.map((employee) => {
+      // Create a new Employee object with the data from the API response
       const newEmployee: Employee = {
         id: "",
         firstName: "",
@@ -143,7 +144,6 @@ const EmployeeTable: React.FC = () => {
       // API Call to fetch employees
       const response = await Employees.getAll(parentPagination.pageIndex, parentPagination.pageSize, sortString)
 
-      console.log(response)
       if (response && response.data && Array.isArray(response.data)) {
         const employeeList = buildEmployeeList(response.data)
         setLoading(false);
@@ -177,7 +177,12 @@ const EmployeeTable: React.FC = () => {
   }, [departments, textFilter])
 
   const handlePaginationChange = (newPagination: PaginationState) => {
+    console.log()
     setParentPagination(newPagination);
+  };
+
+  const handleSortingChange = (newSort: SortingState) => {
+    setParentSorting(newSort);
   };
 
 
@@ -231,9 +236,9 @@ const EmployeeTable: React.FC = () => {
         <TanstackTable
           data={employees}
           columns={columns}
-          onSortingChange={setParentSorting}
-          parentPageIndex={initialPageIndex}
-          parentPageSize={initialPageSize}
+          sortingState={parentSorting}
+          onSortingChange={handleSortingChange}
+          parentPagination={parentPagination}
           onPaginationChange={handlePaginationChange}
         />
       }
