@@ -1,5 +1,31 @@
 ## Keyhook Interview Task
 
+### A word from the developer
+
+#### The project
+For an easier overview, I put both front and back into the same git project, however usually I would prefer to split them into seperate projects. I kept the same commit conjecture indicating if I was working on either one of them. 
+
+For the backend I had no issue installing dependencies and running the backend on WSL but only after having separately installed sqlite3.
+
+For the frontend I used npm out of habit as it does not have an impact on the project.
+I used only few dependencies in order to keep their management to a minimum.
+
+You will need to put a .env file containing your api url at the root of ```/frontend```:
+
+```VITE_API_URL="http://localhost:4567/"```
+
+This allows for easier configuration between the different environments: local, dev, prod, etc. 
+
+#### Areas of improvement
+  - The Tanstack table has a neutral state of sorting for each, which doesn't quite work with server-side sorting. It could be removed to have the sorting be either true or false and the icons should always be visible to indicate to the user that the columns are sortable
+  - The pagination seems a bit unstable, I could not get the total number of pages so the next button is always clickable, making it confusing for the user
+  - I created the backend GET routes incrementally and they are therefore separated. They could be consolidated into one, because it is a matter of which columns are filtered
+  - As a next task, I could add unit tests to the backend
+
+#### A personal note
+
+It was the first time that I was working with Ruby On Rails, Graphiti and Spraypaint. I am more used to working with NodeJS (Express) or Python (Flask). It was a nice challenge to tackle and I learned quite a lot thanks to it. I am aware that I sometimes made the code more complicated than it needed to be and as I get better I will fix those mistakes.
+
 ### Overview
 
 Our stack comprises of a rails backend using Graphiti to power our API. And a separate ReactJS app that powers our web and mobile apps ( we use CapacitorJS for our mobile app ).
