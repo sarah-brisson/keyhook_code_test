@@ -70,81 +70,71 @@ const EmployeeTable: React.FC = () => {
   async function findEmployeesByName() {
     setLoading(true);
     const sortString = buildOrderInstructions()
-    Employees.findByName(textFilter, parentPagination.pageIndex, parentPagination.pageSize, sortString).then((response) => {
-      if (response && Array.isArray(response)) {
-        // Set the Employee List
-        const employeeList = buildEmployeeList(response)
+    Employees.findByName(textFilter, parentPagination.pageIndex, parentPagination.pageSize, sortString)
+      .then((response) => {
+        if (response && Array.isArray(response)) {
+          // Set the Employee List
+          const employeeList = buildEmployeeList(response)
 
-        setLoading(false);
-        setEmployees(employeeList);
-        setError("");
-        // Set the pagination state to the first page
-        if (parentPagination.pageIndex > 1) {
-          setParentPagination({
-            pageIndex: initialPageIndex,
-            pageSize: parentPagination.pageSize,
-          })
+          setEmployees(employeeList);
+          setError("");
+        } else {
+          setError("No employees found with that name");
         }
-      } else {
+      }).catch((error) => {
+        setError("Error fetching employees by name");
+        console.error(error);
+      }).finally(() => {
         setLoading(false);
-        setError("No employees found with that name");
-      }
-    })
+      })
   }
 
   async function findEmployeesByDepartment() {
     setLoading(true);
     const sortString = buildOrderInstructions()
-    Employees.getEmployeeListByDepartmentName(selectedDepartment, parentPagination.pageIndex, parentPagination.pageSize, sortString, textFilter).then((response) => {
-      if (response && Array.isArray(response)) {
-        // Set the Employee List
-        const employeeList = buildEmployeeList(response)
+    Employees.getEmployeeListByDepartmentName(selectedDepartment, parentPagination.pageIndex, parentPagination.pageSize, sortString, textFilter)
+      .then((response) => {
+        if (response && Array.isArray(response)) {
+          // Set the Employee List
+          const employeeList = buildEmployeeList(response)
 
-        setLoading(false);
-        setEmployees(employeeList);
-        setError("");
-        // Set the pagination state to the first page
-        if (parentPagination.pageIndex > 1) {
-          setParentPagination({
-            pageIndex: initialPageIndex,
-            pageSize: parentPagination.pageSize,
-          })
+          setEmployees(employeeList);
+          setError("");
+        } else {
+          setError("No employees found for this Department");
         }
-      } else {
+      })
+      .catch((error) => {
+        setError("Error fetching employees by department");
+        console.error(error);
+      }).finally(() => {
         setLoading(false);
-        setError("No employees found for this Department");
-      }
-    })
+      })
+
   }
 
   const fetchEmployees = async () => {
-    try {
-      setLoading(true);
-      const sortString = buildOrderInstructions()
-      // API Call to fetch employees
-      const response = await Employees.getAll(parentPagination.pageIndex, parentPagination.pageSize, sortString)
+    setLoading(true);
+    const sortString = buildOrderInstructions()
+    // API Call to fetch employees
+    Employees.getAll(parentPagination.pageIndex, parentPagination.pageSize, sortString)
+      .then((response) => {
 
-      if (response && response.data && Array.isArray(response.data)) {
-        const employeeList = buildEmployeeList(response.data)
-        setLoading(false);
-        setEmployees(employeeList);
-        setError("");
-        // Set the pagination state to the first page
-        if (parentPagination.pageIndex > 1) {
-          setParentPagination({
-            pageIndex: initialPageIndex,
-            pageSize: parentPagination.pageSize,
-          })
+        if (response && response.data && Array.isArray(response.data)) {
+          const employeeList = buildEmployeeList(response.data)
+          setEmployees(employeeList);
+          setError("");
+        } else {
+          setError("Error fetching employees");
         }
-      } else {
-        setLoading(false);
+      })
+      .catch((err) => {
         setError("Error fetching employees");
-      }
-    } catch (err) {
-      setLoading(false);
-      setError("Error fetching employees");
-      console.error(err);
-    }
+        console.error(err);
+      })
+      .finally(() => {
+        setLoading(false);
+      })
   };
 
   useEffect(() => {
