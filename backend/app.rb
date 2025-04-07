@@ -108,4 +108,51 @@ class EmployeeDirectoryApp < Sinatra::Application
       '{}'.to_json
     end
   end
+
+  # Add a new employee
+  # Example: POST /api/v1/employees
+  # Request body: { "first_name": "John", "last_name": "Doe", "age": 30, "position": "Developer", "department_id": 1 }
+  # Response: 201 Created
+  # Response: 409 Conflict with department, first_name and last_name
+  post '/api/v1/employees' do
+    request_payload = JSON.parse(request.body.read)
+
+    first_name = request_payload['first_name']
+    last_name = request_payload['last_name']
+    age = request_payload['age']
+    position = request_payload['position']
+    department_id = request_payload['department_id']
+
+    # Check if an employee with the same first and last name exists in the same department
+    existing_employee = Employee.where(
+      first_name: first_name,
+      last_name: last_name,
+      department_id: department_id
+    ).first
+
+    if existing_employee
+      status 409
+      content_type :json
+      { error: 'An employee with the same first and last name already exists in this department.' }.to_json
+    else
+      # Create the new employee
+      new_employee = Employee.create(
+        first_name: first_name,
+        last_name: last_name,
+        age: age,
+        position: position,
+        department_id: department_id
+      )
+
+      if new_employee.persisted?
+        status 201
+        content_type :json
+        new_employee.to_json(include: [:department])
+      else
+        status 422
+        content_type :json
+        { error: 'Failed to create the employee.', details: new_employee.errors.full_messages }.to_json
+      end
+    end
+  end
 end
