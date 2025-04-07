@@ -2,15 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 import { PuffLoader } from 'react-spinners';
 
-import { Departments, Employees } from '../../api/apiConfig';
-import { Department, Employee, EmployeeResponse } from '../../utils/types';
+import { Employees } from '../../api/apiConfig';
+import { Employee, EmployeeResponse } from '../../utils/types';
 import TanstackTable from '../common/Table';
 import InputFilter from './InputFilter';
+import DepartmentSelect from './DeparmentSelect';
 
 
 const EmployeeTable: React.FC = () => {
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [parentSorting, setParentSorting] = useState<SortingState>([{
@@ -24,61 +25,6 @@ const EmployeeTable: React.FC = () => {
     pageSize: initialPageSize,
   });
   const [textFilter, setTextFilter] = useState<string>("");
-
-  useEffect(() => {
-    const fetchDepartmentsFromAPI = async () => {
-      setLoading(true);
-      try {
-        const response = await Departments.all();
-
-        // Simplify the Department list
-        const departmentList: Department[] = []
-        response.data.map((element) => {
-          departmentList.push({
-            "id": element.id,
-            "name": element.name
-          })
-        })
-
-        // Save simplified list to local storage for easier access
-        // For more complex or sensitive data, Redux or another storage library would be better
-        localStorage.setItem('departments', JSON.stringify(departmentList));
-
-        setDepartments(departmentList);
-        setError("");
-      } catch (err) {
-        setError("Error fetching departments");
-        console.error('Error fetching departments:', err);
-      }
-    }
-
-    const loadDepartments = () => {
-      // If the department list already exists in the local Storage, don't fetch it
-      let departmentStorage = localStorage.getItem('departments')
-      if (!departmentStorage || departmentStorage.length === 0) {
-        fetchDepartmentsFromAPI();
-      } else {
-        // Parse the local storage item into a list of Departments
-        try {
-          departmentStorage = JSON.parse(departmentStorage);
-          if (Array.isArray(departmentStorage)) {
-            const departmentList: Department[] = departmentStorage.map((resource) => ({
-              id: resource.id,
-              name: resource.name,
-            }));
-            setDepartments(departmentList);
-          }
-        } catch (error) {
-          console.error("Error parsing department data from local storage:", error);
-          // If there is an issue with the object, remove it and fetch from API
-          localStorage.removeItem('departments');
-          fetchDepartmentsFromAPI();
-        }
-      }
-    }
-
-    loadDepartments()
-  }, []);
 
   // Function to add the sorting request to the API calls
   const buildOrderInstructions = () => {
@@ -138,6 +84,24 @@ const EmployeeTable: React.FC = () => {
     })
   }
 
+  async function findEmployeesByDepartment() {
+    setLoading(true);
+    const sortString = buildOrderInstructions()
+    Employees.getEmployeeListByDepartmentName(selectedDepartment, parentPagination.pageIndex, parentPagination.pageSize, sortString).then((response) => {
+      if (response && Array.isArray(response)) {
+        // Set the Employee List
+        const employeeList = buildEmployeeList(response)
+
+        setLoading(false);
+        setEmployees(employeeList);
+        setError("");
+      } else {
+        setLoading(false);
+        setError("No employees found for this Department");
+      }
+    })
+  }
+
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -161,6 +125,17 @@ const EmployeeTable: React.FC = () => {
     }
   };
 
+  useEffect(() => { 
+    // When a department is selected, fetch the employees for that department 
+    if (selectedDepartment.length > 0) {
+      findEmployeesByDepartment();
+    } else {
+      // If no department is selected, fetch all employees
+      fetchEmployees()
+    }
+  }
+  , [selectedDepartment]);
+
   useEffect(() => {
     // If the sorting changes, fetch the employees again
     if (textFilter.length > 0) {
@@ -178,10 +153,9 @@ const EmployeeTable: React.FC = () => {
     } else {
       fetchEmployees()
     }
-  }, [departments, textFilter])
+  }, [textFilter])
 
   const handlePaginationChange = (newPagination: PaginationState) => {
-    console.log()
     setParentPagination(newPagination);
   };
 
@@ -230,6 +204,7 @@ const EmployeeTable: React.FC = () => {
   return (
     <div className='flex justify-center flex-col p-10'>
       <InputFilter onTextChange={setTextFilter} />
+      <DepartmentSelect selectDepartment={setSelectedDepartment}/>
       {loading ? <PuffLoader
         color="green"
         size={60}

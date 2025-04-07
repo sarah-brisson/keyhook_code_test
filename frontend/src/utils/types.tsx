@@ -13,6 +13,11 @@ export interface Department {
   name: string;
 }
 
+export interface DepartmentOption {
+  value: string;
+  label: string;
+}
+
 export interface PaginationState {
   pageIndex: number;
   pageSize: number;
