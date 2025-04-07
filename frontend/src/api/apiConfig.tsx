@@ -80,4 +80,29 @@ export class Employees extends ApplicationRecord {
       return {};
     }
   }
+
+  static async createNewEmployee(body: any) {
+    try {
+      const response = await fetch(`${this.baseUrl}${this.apiNamespace}/employees`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          method: "POST",
+          body: JSON.stringify(body)
+        })
+      if (response.ok) {
+        return { message: "New Employee Created", created: true }
+      } else if (response.status === 409) {
+        return { message: "An employee with the same first and last name already exists in this Department", created: false }
+      } else {
+        console.error('Error searching employees per department:', response.status, response.statusText);
+        return { message: "An error occured", created: false }
+      }
+    } catch (error) {
+      console.error('Error searching employees per department:', error);
+      return { message: "An error occured", created: false }
+    }
+  }
 }
