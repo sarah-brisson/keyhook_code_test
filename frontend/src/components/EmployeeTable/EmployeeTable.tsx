@@ -121,6 +121,7 @@ const EmployeeTable: React.FC = () => {
   }
 
   async function findEmployeesByName() {
+    setLoading(true);
     const sortString = buildOrderInstructions()
     Employees.findByName(textFilter, parentPagination.pageIndex, parentPagination.pageSize, sortString).then((response) => {
       if (response && Array.isArray(response)) {
@@ -162,9 +163,12 @@ const EmployeeTable: React.FC = () => {
 
   useEffect(() => {
     // If the sorting changes, fetch the employees again
-    if (parentSorting.length > 0) {
-      fetchEmployees();
-    }
+    if (textFilter.length > 0) {
+      findEmployeesByName();
+    } else
+      if (parentSorting.length > 0) {
+        fetchEmployees();
+      }
   }, [parentSorting, parentPagination])
 
   useEffect(() => {
