@@ -59,7 +59,7 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
                         <select id="department" name="department" onChange={selectDepartment}
                             defaultValue=""
                             className="w-1/2 p-2 border border-gray-300 rounded-md shadow-sm">
-                            <option value="" disabled> </option>
+                            <option value=""> </option>
                             {departmentOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
