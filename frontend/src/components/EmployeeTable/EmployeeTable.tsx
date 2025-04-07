@@ -87,7 +87,7 @@ const EmployeeTable: React.FC = () => {
   async function findEmployeesByDepartment() {
     setLoading(true);
     const sortString = buildOrderInstructions()
-    Employees.getEmployeeListByDepartmentName(selectedDepartment, parentPagination.pageIndex, parentPagination.pageSize, sortString).then((response) => {
+    Employees.getEmployeeListByDepartmentName(selectedDepartment, parentPagination.pageIndex, parentPagination.pageSize, sortString, textFilter).then((response) => {
       if (response && Array.isArray(response)) {
         // Set the Employee List
         const employeeList = buildEmployeeList(response)

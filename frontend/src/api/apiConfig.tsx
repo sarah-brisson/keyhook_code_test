@@ -63,9 +63,9 @@ export class Employees extends ApplicationRecord {
     }
   }
 
-  static async getEmployeeListByDepartmentName(departmentName: string, pageNumber: number, pageSize: number, sort: string) {
+  static async getEmployeeListByDepartmentName(departmentName: string, pageNumber: number, pageSize: number, sort: string, searchText: string = "") {
     try {
-      const response = await fetch(`${this.baseUrl}${this.apiNamespace}/departments/find/${departmentName}/employees?page[number]=${String(pageNumber)}&page[size]=${String(pageSize)}&sort=${sort}&include=department`);
+      const response = await fetch(`${this.baseUrl}${this.apiNamespace}/departments/find/${departmentName}/employees?employee_name=${searchText}&page[number]=${String(pageNumber)}&page[size]=${String(pageSize)}&sort=${sort}&include=department`);
       if (response.ok) {
         const json = await response.json();
         return json;
