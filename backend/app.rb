@@ -63,13 +63,19 @@ class EmployeeDirectoryApp < Sinatra::Application
     departments.to_jsonapi
   end
 
-  # Get employees by department name
+  # Get employees by department name and filter by employee name
+  # Example: /api/v1/departments/find/IT/employees
+  # Example: /api/v1/departments/find/HR/employees?employee_name=john
   get '/api/v1/departments/find/:name/employees' do
     department_name = params[:name]
+    employee_name_filter = params[:employee_name]&.downcase
     department = Department.find_by(name: department_name)
 
     if department
       employees = department.employees
+      if employee_name_filter and !employee_name_filter.empty?
+        employees = employees.where("lower(first_name) LIKE ? OR lower(last_name) LIKE ?", "%#{employee_name_filter}%", "%#{employee_name_filter}%")
+      end
       status 200
       content_type :jsonapi
       employees.to_json(include: [:department])
@@ -80,12 +86,14 @@ class EmployeeDirectoryApp < Sinatra::Application
     end
   end
 
-  # New route to get all employees
+  # Get all employees
   get '/api/v1/employees' do
     employees = EmployeeResource.all(params)
     employees.to_json
   end
 
+  # Get a list of employees filtered by first name or last name
+  # Example: /api/v1/employees/find/john
   get '/api/v1/employees/find/:text' do
     search_term = params[:text].downcase
     @employees = Employee.where("lower(first_name) LIKE ? OR lower(last_name) LIKE ?", "%#{search_term}%", "%#{search_term}%")
