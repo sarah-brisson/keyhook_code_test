@@ -73,12 +73,35 @@ class EmployeeDirectoryApp < Sinatra::Application
 
     if department
       employees = department.employees
-      if employee_name_filter and !employee_name_filter.empty?
+
+      # Apply employee name filter if provided
+      if employee_name_filter && !employee_name_filter.empty?
         employees = employees.where("lower(first_name) LIKE ? OR lower(last_name) LIKE ?", "%#{employee_name_filter}%", "%#{employee_name_filter}%")
       end
+
+      # Apply sorting if provided
+      if params[:sort]
+        if params[:sort].start_with?('-')
+          sort_direction = 'desc'
+          # remove the first character from the sort parameter to get the column name
+          sort_column = params[:sort][1..-1]
+        else
+          sort_direction = 'asc'
+          sort_column = params[:sort]
+        end
+          employees = employees.order("#{sort_column} #{sort_direction}")
+      end
+
+      # Apply pagination
+      if params[:page]
+        page_number = (params.dig(:page, :number) || 1).to_i
+        page_size = (params.dig(:page, :size) || 10).to_i
+        employees = employees.page(page_number).per(page_size)
+      end
+
       status 200
       content_type :jsonapi
-      employees.to_json(include: [:department])
+      employees.to_json(include: [:department], meta: { total_pages: employees.total_pages, current_page: page_number })
     else
       status 404
       content_type :jsonapi
@@ -96,16 +119,35 @@ class EmployeeDirectoryApp < Sinatra::Application
   # Example: /api/v1/employees/find/john
   get '/api/v1/employees/find/:text' do
     search_term = params[:text].downcase
-    @employees = Employee.where("lower(first_name) LIKE ? OR lower(last_name) LIKE ?", "%#{search_term}%", "%#{search_term}%")
-
-    if @employees.present?
+    employees = Employee.where("lower(first_name) LIKE ? OR lower(last_name) LIKE ?", "%#{search_term}%", "%#{search_term}%")
+  
+    # Apply sorting if provided
+    if params[:sort]
+      if params[:sort].start_with?('-')
+        sort_direction = 'desc'
+        sort_column = params[:sort][1..-1] # Remove the leading '-' for the column name
+      else
+        sort_direction = 'asc'
+        sort_column = params[:sort]
+      end
+      employees = employees.order("#{sort_column} #{sort_direction}")
+    end
+  
+    # Apply pagination
+    if params[:page]
+      page_number = (params.dig(:page, :number) || 1).to_i
+      page_size = (params.dig(:page, :size) || 10).to_i
+      employees = employees.page(page_number).per(page_size)
+    end
+  
+    if employees.any?
       status 200
-      content_type :json
-      @employees.to_json(include: [:department])
+      content_type :jsonapi
+      employees.to_json(include: [:department], meta: { total_pages: employees.total_pages, current_page: page_number })
     else
       status 404
-      content_type :json
-      '{}'.to_json
+      content_type :jsonapi
+      { errors: [{ status: '404', title: 'No Employees Found' }] }.to_json
     end
   end
 
