@@ -165,11 +165,27 @@ class EmployeeDirectoryApp < Sinatra::Application
     position = request_payload['position']
     department_id = request_payload['department_id']
 
+    # Check if the department exists
+    department = Department.find_by(id: department_id)
+    unless department
+      status 404
+      content_type :json
+      return { error: 'Department not found.' }.to_json
+    end
+
+    # Check if the age is a valid integer and within the range
+    unless age.is_a?(Integer) && age > 15 && age < 100
+      status 422
+      content_type :json
+      return { error: 'Age incorrect.' }.to_json
+    end
+
     # Check if an employee with the same first and last name exists in the same department
     existing_employee = Employee.where(
-      first_name: first_name,
-      last_name: last_name,
-      department_id: department_id
+      "LOWER(first_name) = ? AND LOWER(last_name) = ? AND department_id = ?",
+      first_name.downcase,
+      last_name.downcase,
+      department_id
     ).first
 
     if existing_employee
