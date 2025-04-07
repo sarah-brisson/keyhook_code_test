@@ -63,6 +63,23 @@ class EmployeeDirectoryApp < Sinatra::Application
     departments.to_jsonapi
   end
 
+  # Get employees by department name
+  get '/api/v1/departments/find/:name/employees' do
+    department_name = params[:name]
+    department = Department.find_by(name: department_name)
+
+    if department
+      employees = department.employees
+      status 200
+      content_type :jsonapi
+      employees.to_json(include: [:department])
+    else
+      status 404
+      content_type :jsonapi
+      { errors: [{ status: '404', title: 'Department Not Found' }] }.to_json
+    end
+  end
+
   # New route to get all employees
   get '/api/v1/employees' do
     employees = EmployeeResource.all(params)
