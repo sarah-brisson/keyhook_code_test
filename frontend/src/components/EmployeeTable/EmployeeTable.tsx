@@ -3,10 +3,11 @@ import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import { PuffLoader } from 'react-spinners';
 
 import { Employees } from '../../api/apiConfig';
-import { Employee, EmployeeResponse } from '../../utils/types';
+import { DepartmentOption, Employee, EmployeeResponse } from '../../utils/types';
 import TanstackTable from '../common/Table';
 import InputFilter from './InputFilter';
 import DepartmentSelect from './DeparmentSelect';
+import NewEmployeeForm from './NewEmployeeForm';
 
 
 const EmployeeTable: React.FC = () => {
@@ -184,6 +185,12 @@ const EmployeeTable: React.FC = () => {
     setParentSorting(newSort);
   };
 
+  const handleDepartmentSelect = (departmentOption: DepartmentOption | undefined) => {
+    if (departmentOption !== undefined) {
+      setSelectedDepartment(departmentOption.label);
+    }
+  };
+
 
   // Columns for the Tanstack Table
   const columns = useMemo<ColumnDef<Employee>[]>(
@@ -225,7 +232,10 @@ const EmployeeTable: React.FC = () => {
   return (
     <div className='flex justify-center flex-col p-10'>
       <InputFilter onTextChange={setTextFilter} />
-      <DepartmentSelect selectDepartment={setSelectedDepartment} />
+      <DepartmentSelect selectDepartment={handleDepartmentSelect} />
+      <div className='flex justify-end pb-10'>
+        <NewEmployeeForm />
+      </div>
       {loading ? <PuffLoader
         color="green"
         size={60}

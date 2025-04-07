@@ -5,7 +5,7 @@ import { Departments } from '../../api/apiConfig';
 import { DepartmentOption } from '../../utils/types';
 
 interface DepartmentSelectProps {
-    selectDepartment: (department: string) => void;
+    selectDepartment: (department: DepartmentOption | undefined) => void;
 }
 
 const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
@@ -25,7 +25,7 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
                 response.data.map((element) => {
                     departmentList.push({
                         "label": element.name,
-                        "value": element.name
+                        "value": element.id
                     })
 
                 })
@@ -44,9 +44,10 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
     }, []);
 
 
- const selectDepartment = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectDepartment = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedDepartment = event.target.value;
-        props.selectDepartment(selectedDepartment);
+        const initialOption = departmentOptions.find(option => option.value === selectedDepartment);
+        props.selectDepartment(initialOption);
     };
 
 
@@ -55,7 +56,7 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = (props) => {
             {loading ? <SyncLoader color="#36d7b7" size={10} />
                 : error !== "" ? <div>{error}</div> :
                     <>
-                        <label htmlFor="department">Filter by Departments: </label>
+                        <label htmlFor="department">Select Department: </label>
                         <select id="department" name="department" onChange={selectDepartment}
                             defaultValue=""
                             className="w-1/2 p-2 border border-gray-300 rounded-md shadow-sm">
