@@ -78,10 +78,12 @@ const EmployeeTable: React.FC = () => {
         setEmployees(employeeList);
         setError("");
         // Set the pagination state to the first page
-        setParentPagination({
-          pageIndex: initialPageIndex,
-          pageSize: parentPagination.pageSize,
-        })
+        if (parentPagination.pageIndex > 1) {
+          setParentPagination({
+            pageIndex: initialPageIndex,
+            pageSize: parentPagination.pageSize,
+          })
+        }
       } else {
         setLoading(false);
         setError("No employees found with that name");
@@ -101,10 +103,12 @@ const EmployeeTable: React.FC = () => {
         setEmployees(employeeList);
         setError("");
         // Set the pagination state to the first page
-        setParentPagination({
-          pageIndex: initialPageIndex,
-          pageSize: parentPagination.pageSize,
-        })
+        if (parentPagination.pageIndex > 1) {
+          setParentPagination({
+            pageIndex: initialPageIndex,
+            pageSize: parentPagination.pageSize,
+          })
+        }
       } else {
         setLoading(false);
         setError("No employees found for this Department");
@@ -125,10 +129,12 @@ const EmployeeTable: React.FC = () => {
         setEmployees(employeeList);
         setError("");
         // Set the pagination state to the first page
-        setParentPagination({
-          pageIndex: initialPageIndex,
-          pageSize: parentPagination.pageSize,
-        })
+        if (parentPagination.pageIndex > 1) {
+          setParentPagination({
+            pageIndex: initialPageIndex,
+            pageSize: parentPagination.pageSize,
+          })
+        }
       } else {
         setLoading(false);
         setError("Error fetching employees");
@@ -140,7 +146,7 @@ const EmployeeTable: React.FC = () => {
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     // When a department is selected, fetch the employees for that department 
     if (selectedDepartment.length > 0) {
       findEmployeesByDepartment();
@@ -149,7 +155,7 @@ const EmployeeTable: React.FC = () => {
       fetchEmployees()
     }
   }
-  , [selectedDepartment]);
+    , [selectedDepartment]);
 
   useEffect(() => {
     // If the sorting changes, fetch the employees again
@@ -219,7 +225,7 @@ const EmployeeTable: React.FC = () => {
   return (
     <div className='flex justify-center flex-col p-10'>
       <InputFilter onTextChange={setTextFilter} />
-      <DepartmentSelect selectDepartment={setSelectedDepartment}/>
+      <DepartmentSelect selectDepartment={setSelectedDepartment} />
       {loading ? <PuffLoader
         color="green"
         size={60}
