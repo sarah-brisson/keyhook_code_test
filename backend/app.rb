@@ -165,6 +165,16 @@ class EmployeeDirectoryApp < Sinatra::Application
     position = request_payload['position']
     department_id = request_payload['department_id']
 
+
+    # Check if any required fields are null or empty
+    if first_name.nil? || first_name.strip.empty? ||
+        last_name.nil? || last_name.strip.empty? ||
+        position.nil? || position.strip.empty?
+      status 422
+      content_type :json
+      return { error: 'First name, last name, and position cannot be null or empty.' }.to_json
+    end
+
     # Check if the department exists
     department = Department.find_by(id: department_id)
     unless department
